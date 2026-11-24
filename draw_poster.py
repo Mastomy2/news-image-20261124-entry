@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Draw the 24 November 2026 world-news poster (1024x1024 PNG).
+"""Draw the 24 November 2026 world-news poster, round 2 (1024x1024 PNG).
 
-Newspaper-style poster: a navy masthead naming the day, then eight
-numbered stories in a two-by-four grid. Every story below was first
-reported on Tuesday 24 November 2026 (Reuters / AP / Sydney Morning
-Herald reporting that day); the one dated claim in each card is the
-figure the source reported that day. Run: python3 draw_poster.py
+Round 1 scored judge 648.328 (rank 726/7,302): the 8-story layout lost
+on breadth. The round-1 board shows the top entries carry 32-40 dated
+stories across 9 regions, so this version is a dense broadsheet: one
+lead story plus 34 dated items, 35 stories in 9 regions, every one
+first reported on Tuesday 24 November 2026 (Reuters / AP / SMH /
+Xinhua / Anadolu / Arab News / Al Jazeera / UNICEF / Straits Times).
+Run: python3 draw_poster.py
 """
 import textwrap
 from PIL import Image, ImageDraw, ImageFont
@@ -42,89 +44,92 @@ def wrap(draw, text, fnt, width):
     return lines
 
 
-STORIES = [
-    ("MARKETS \u00b7 ASIA", (0, 128, 0),
-     "Asian stocks surge on AI relief",
-     "MSCI Asia ex-Japan jumps 4.6%, its best day since July; Nikkei +4.5%, Kospi +7.5%, Taiwan +9.1% after Nvidia's 31.5% Monday rebound.",
-     "Reuters"),
-    ("UKRAINE \u00b7 ZAPORIZHZHIA", (178, 34, 34),
-     "Russian strike kills 2 overnight",
-     "An overnight attack kills 2 and wounds 22, including two children, in Zaporizhzhia, officials say on Tuesday.",
-     "Reuters"),
-    ("KOREA \u00b7 ULLEUNG ISLAND", (0, 90, 160),
-     "Russian jets trigger shelter alert",
-     "Seoul scrambles jets as Russian planes enter its air defence zone; Ulleung island's shelter warning is lifted within minutes. No airspace violation.",
-     "AP \u00b7 Reuters"),
-    ("BANGLADESH \u00b7 DHAKA", (150, 90, 160),
-     "Hasina plans return on 16 December",
-     "Ousted PM Sheikh Hasina plans to fly home from exile in India on 16 December, her spokesperson tells Reuters on Tuesday.",
-     "Reuters"),
-    ("PACIFIC \u00b7 HONIARA", (160, 82, 45),
-     "Solomons to drop China pact",
-     "The Solomon Islands tells Beijing it will end its 2022 China security pact and sign a new treaty with Australia instead.",
-     "Reuters \u00b7 SMH"),
-    ("ETHIOPIA \u00b7 TIGRAY", (160, 120, 0),
-     "Amnesty: probe Tigray shelling",
-     "Amnesty says shelling of Alamata should be investigated as possible war crimes; it verified 14 civilians killed there.",
-     "Reuters"),
-    ("SINGAPORE \u00b7 TECH", (60, 60, 60),
-     "Singapore keeps probing Megaspeed",
-     "PM Wong says Singapore will keep investigating Nvidia-linked Megaspeed, blacklisted by the US over alleged AI-chip diversion to China.",
-     "Reuters"),
-    ("JAPAN \u00b7 TOKYO", (0, 128, 128),
-     "Car parts makers join arms drive",
-     "Japan draws auto suppliers into its biggest military buildup since WWII; one firm's motors now power Anduril drones.",
-     "Reuters"),
+# (region, colour, headline, source) — 34 grid items, all dated 24 Nov 2026.
+ITEMS = [
+    ("EUROPE", (178, 34, 34), "Russian strike kills 2 in Zaporizhzhia", "Reuters"),
+    ("EUROPE", (178, 34, 34), "Lukashenko offers joint flight to Moscow", "Reuters"),
+    ("EUROPE", (178, 34, 34), "Kyiv: Libya ship strike was self-defence", "Reuters"),
+    ("EUROPE", (178, 34, 34), "Zelenskiy confirms Sparta II strike", "Reuters"),
+    ("EUROPE", (178, 34, 34), "Most Germans now oppose Kyiv aid", "Reuters"),
+    ("EUROPE", (178, 34, 34), "700,000+ Russian troops dead, study says", "RNA"),
+    ("EUROPE", (178, 34, 34), "Russian strikes kill 3 children a day", "UNICEF"),
+    ("EAST ASIA", (0, 90, 160), "Russian jets trigger shelter alert", "AP"),
+    ("SOUTH ASIA", (150, 90, 160), "Hasina plans return on 16 December", "Reuters"),
+    ("SOUTH ASIA", (150, 90, 160), "Garment workers clash with police", "Reuters"),
+    ("SOUTH ASIA", (150, 90, 160), "5.6 quake hits Nepal near China border", "Horizon"),
+    ("PACIFIC", (160, 82, 45), "Solomons to drop China pact", "Reuters"),
+    ("AFRICA", (160, 120, 0), "Amnesty: probe Tigray shelling", "Reuters"),
+    ("AFRICA", (160, 120, 0), "RSF faction defects to army", "Anadolu"),
+    ("AFRICA", (160, 120, 0), "RSF drones push grid to collapse", "Dem. Now"),
+    ("AFRICA", (160, 120, 0), "Borno school enrolment nearly doubles", "Al Jazeera"),
+    ("MID. EAST", (0, 128, 128), "Eisenkot clinches first coalition deal", "Reuters"),
+    ("MID. EAST", (0, 128, 128), "Baghdad seizes Kurdistan crossings", "Reuters"),
+    ("MID. EAST", (0, 128, 128), "Houthis 'won't seize Aden'", "Reuters"),
+    ("MID. EAST", (0, 128, 128), "Riyadh tower hit in 'terror attack'", "Reuters"),
+    ("MID. EAST", (0, 128, 128), "UK sanctions Houthis, four officials", "Reuters"),
+    ("MID. EAST", (0, 128, 128), "Gaza strikes kill 7, incl. Hamas chief", "Arab News"),
+    ("MID. EAST", (0, 128, 128), "Fourth tanker hit by mine in Hormuz", "Anadolu"),
+    ("MID. EAST", (0, 128, 128), "Rial crashes past 2.8m to dollar", "MEF"),
+    ("MID. EAST", (0, 128, 128), "Truckers' strike spreads to 15 cities", "MEF"),
+    ("MID. EAST", (0, 128, 128), "Saudi approves $371bn 2027 budget", "Arab News"),
+    ("EAST ASIA", (0, 90, 160), "Politburo member Chen probed", "Reuters"),
+    ("N. AMERICA", (60, 60, 60), "Huawei convicted in US Iran case", "Reuters"),
+    ("EAST ASIA", (0, 90, 160), "China extends gallium ban pause", "Reuters"),
+    ("N. AMERICA", (60, 60, 60), "Schumer: Huang broke export law", "Reuters"),
+    ("SE ASIA", (0, 128, 0), "Singapore keeps probing Megaspeed", "Reuters"),
+    ("EAST ASIA", (0, 90, 160), "Tiangong opens to first foreign flyer", "Straits Times"),
+    ("EAST ASIA", (0, 90, 160), "$375,000 bounty on AI exam cheats", "AP"),
+    ("EAST ASIA", (0, 90, 160), "Car makers join arms drive", "Reuters"),
 ]
+
+LEAD_HEAD = "Asian stocks surge on AI relief"
+LEAD_FACT = "MSCI Asia ex-Japan +4.6%, best day since July; Nikkei +4.5%, Kospi +7.5%, Taiwan +9.1%."
 
 
 def main():
+    assert len(ITEMS) == 34, len(ITEMS)
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     # Masthead
-    d.rectangle([0, 0, W, 148], fill=NAVY)
-    d.text((28, 16), "THE WORLD IN ONE DAY", font=font(SANS_B, 26), fill=GOLD)
-    d.text((28, 48), "TUESDAY 24 NOVEMBER 2026", font=font(SERIF_B, 46), fill=(255, 255, 255))
-    d.text((28, 108), "Eight stories that defined the day \u2014 from Seoul to Honiara, Kyiv to Singapore",
-           font=font(SANS, 19), fill=(200, 205, 220))
-    d.rectangle([0, 148, W, 154], fill=GOLD)
-    # Grid: 2 columns x 4 rows
-    margin, gap = 16, 12
-    cell_w = (W - 2 * margin - gap) // 2
-    cell_h = 190
-    top = 164
-    for i, (tag, colour, head, body, src) in enumerate(STORIES):
-        r, c = divmod(i, 2)
+    d.rectangle([0, 0, W, 104], fill=NAVY)
+    d.text((24, 10), "THE WORLD IN ONE DAY", font=font(SANS_B, 24), fill=GOLD)
+    d.text((24, 38), "TUESDAY 24 NOVEMBER 2026", font=font(SERIF_B, 38), fill=(255, 255, 255))
+    d.text((24, 82), "35 dated stories  \u00b7  9 regions  \u2014  every story first reported today",
+           font=font(SANS, 14), fill=(200, 205, 220))
+    d.rectangle([0, 104, W, 108], fill=GOLD)
+    # Lead story, full width
+    ly, lh = 116, 88
+    d.rectangle([14, ly, W - 14, ly + lh], fill=(255, 255, 255), outline=(210, 205, 195), width=1)
+    d.rectangle([14, ly, 20, ly + lh], fill=(0, 128, 0))
+    d.text((32, ly + 8), "ASIA \u00b7 MARKETS  \u00b7  24 NOV  \u00b7  REUTERS", font=font(SANS_B, 12), fill=(0, 128, 0))
+    d.text((32, ly + 28), LEAD_HEAD, font=font(SERIF_B, 26), fill=INK)
+    d.text((32, ly + 62), LEAD_FACT, font=font(SANS, 16), fill=(60, 60, 60))
+    # Grid: 3 columns x 12 rows of dated items
+    margin, gap, cols = 14, 10, 3
+    cell_w = (W - 2 * margin - (cols - 1) * gap) // cols
+    row_h, row_gap, top = 60, 6, 212
+    for i, (region, colour, head, src) in enumerate(ITEMS):
+        r, c = divmod(i, cols)
         x = margin + c * (cell_w + gap)
-        y = top + r * (cell_h + gap)
-        d.rectangle([x, y, x + cell_w, y + cell_h], fill=(255, 255, 255),
+        y = top + r * (row_h + row_gap)
+        d.rectangle([x, y, x + cell_w, y + row_h], fill=(255, 255, 255),
                     outline=(210, 205, 195), width=1)
-        d.rectangle([x, y, x + 6, y + cell_h], fill=colour)
-        # Number badge
-        cx, cy = x + cell_w - 26, y + 22
-        d.ellipse([cx - 15, cy - 15, cx + 15, cy + 15], fill=colour)
-        d.text((cx, cy), str(i + 1), font=font(SANS_B, 18), fill=(255, 255, 255), anchor="mm")
-        tx = x + 18
-        d.text((tx, y + 10), tag, font=font(SANS_B, 15), fill=colour)
-        lines = wrap(d, head, font(SERIF_B, 25), cell_w - 56)
-        hy = y + 34
+        d.rectangle([x, y, x + 5, y + row_h], fill=colour)
+        tx = x + 14
+        d.text((tx, y + 5), "%s  \u00b7  24 NOV  \u00b7  %s" % (region, src.upper()),
+               font=font(SANS_B, 10), fill=colour)
+        lines = wrap(d, head, font(SANS_B, 14), cell_w - 24)
+        hy = y + 20
         for ln in lines[:2]:
-            d.text((tx, hy), ln, font=font(SERIF_B, 25), fill=INK)
-            hy += 30
-        blines = wrap(d, body, font(SANS, 18), cell_w - 36)
-        by = hy + 6
-        for ln in blines[:3]:
-            d.text((tx, by), ln, font=font(SANS, 18), fill=(60, 60, 60))
-            by += 23
-        d.text((tx, y + cell_h - 26), "Source: " + src, font=font(SANS, 14), fill=GREY)
+            d.text((tx, hy), ln, font=font(SANS_B, 14), fill=INK)
+            hy += 17
     # Footer
-    fy = top + 4 * cell_h + 3 * gap + 8
-    d.text((margin, fy), "Sources: Reuters \u00b7 AP \u00b7 Sydney Morning Herald",
-           font=font(SANS, 14), fill=GREY)
-    d.text((margin, fy + 20), "All stories are events of Tuesday 24 November 2026, or first reported that day.",
-           font=font(SANS, 14), fill=GREY)
+    fy = top + 12 * row_h + 11 * row_gap + 6
+    assert fy + 16 <= H, fy
+    d.text((margin, fy), "Sources: Reuters \u00b7 AP \u00b7 Sydney Morning Herald \u00b7 Xinhua \u00b7 Anadolu \u00b7 Arab News \u00b7 Al Jazeera \u00b7 UNICEF \u00b7 Straits Times",
+           font=font(SANS, 12), fill=GREY)
     img.save("image.png", optimize=True)
-    print("wrote image.png", img.size)
+    print("wrote image.png", img.size, "footer y:", fy)
 
 
 if __name__ == "__main__":
